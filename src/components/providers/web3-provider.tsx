@@ -3,6 +3,7 @@
 import { mainnet } from "viem/chains";
 import { WagmiProvider, createConfig, http } from "wagmi";
 import { walletConnect } from "wagmi/connectors";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 const projectId = process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID || "";
 
@@ -25,10 +26,14 @@ const config = createConfig({
   ],
 });
 
+const queryClient = new QueryClient();
+
 export const Web3Provider = ({ children }: { children: React.ReactNode }) => {
   return (
     <WagmiProvider config={config}>
+      <QueryClientProvider client={queryClient}>
         {children}
+      </QueryClientProvider>
     </WagmiProvider>
   );
 };
