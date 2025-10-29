@@ -5,6 +5,7 @@ import GasAnalysis from "@/components/dashboard/gas-analysis";
 import TopTokens from "@/components/dashboard/top-tokens";
 import TopNfts from "@/components/dashboard/top-nfts";
 import OnchainStory from "@/components/dashboard/onchain-story";
+import WalletStats from "@/components/dashboard/wallet-stats";
 
 export default function Home() {
   return (
@@ -14,6 +15,7 @@ export default function Home() {
         <div className="grid grid-cols-1 xl:grid-cols-4 gap-6">
           <div className="xl:col-span-1 flex flex-col gap-6">
             <WalletManager />
+            <WalletStats />
             <OnchainStory />
           </div>
           <div className="xl:col-span-3 flex flex-col gap-6">
