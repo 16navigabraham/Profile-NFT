@@ -1,3 +1,40 @@
 {
-  "placeholderImages": []
+  "placeholderImages": [
+    {
+      "id": "nft-1",
+      "description": "A colorful abstract NFT.",
+      "imageUrl": "https://images.unsplash.com/photo-1533158388470-9a56699990c6?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw0fHxhYnN0cmFjdCUyMGFydHxlbnwwfHx8fDE3NjE3MTMxNjV8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "abstract art"
+    },
+    {
+      "id": "nft-2",
+      "description": "A futuristic city skyline NFT.",
+      "imageUrl": "https://images.unsplash.com/photo-1533637041618-f0e4c869801e?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw5fHxmdXR1cmlzdGljJTIwY2l0eXxlbnwwfHx8fDE3NjE2NTc1MjN8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "futuristic city"
+    },
+    {
+      "id": "nft-3",
+      "description": "A pixelated character NFT.",
+      "imageUrl": "https://images.unsplash.com/photo-1660507224958-729c18ba1277?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxMHx8cGl4ZWwlMjBhcnR8ZW58MHx8fHwxNzYxNjg4NzYxfDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "pixel art"
+    },
+    {
+      "id": "nft-4",
+      "description": "A serene nature landscape NFT.",
+      "imageUrl": "https://images.unsplash.com/photo-1621846846625-f0bde2eb7c3c?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw3fHxuYXR1cmUlMjBsYW5kc2NhcGV8ZW58MHx8fHwxNzYxNzA3MzI4fDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "nature landscape"
+    },
+    {
+      "id": "nft-5",
+      "description": "A 3D geometric shape NFT.",
+      "imageUrl": "https://images.unsplash.com/photo-1548357204-82fc6c4a0c67?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw3fHxnZW9tZXRyaWMlMjBzaGFwZXxlbnwwfHx8fDE3NjE3MTM2Njd8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "geometric shape"
+    },
+    {
+      "id": "nft-6",
+      "description": "An animated creature NFT.",
+      "imageUrl": "https://images.unsplash.com/photo-1759670944001-430986689b77?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw1fHxmYW50YXN5JTIwY3JlYXR1cmV8ZW58MHx8fHwxNzYxNjQwODgwfDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "fantasy creature"
+    }
+  ]
 }
