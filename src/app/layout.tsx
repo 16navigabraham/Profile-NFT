@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import { Toaster } from "@/components/ui/toaster";
 import { Web3Provider } from "@/components/providers/web3-provider";
+import { TransactionProvider } from "@/components/providers/transaction-provider";
 
 export const metadata: Metadata = {
   title: "Onchain Portfolio",
@@ -29,8 +30,10 @@ export default function RootLayout({
       </head>
       <body className="font-body antialiased">
         <Web3Provider>
-          {children}
-          <Toaster />
+          <TransactionProvider>
+            {children}
+            <Toaster />
+          </TransactionProvider>
         </Web3Provider>
       </body>
     </html>

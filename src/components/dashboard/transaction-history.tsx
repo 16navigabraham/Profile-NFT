@@ -1,7 +1,5 @@
-
 "use client";
 
-import { useState, useEffect } from "react";
 import { useAccount } from "wagmi";
 import {
   Card,
@@ -18,23 +16,11 @@ import {
 } from "@/components/ui/accordion";
 import { ArrowUpRight, ArrowDownLeft, RefreshCw, Star, Loader2 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
+import { useTransactions, type Transaction } from "@/components/providers/transaction-provider";
 
-type Transaction = {
-  hash: string;
-  from: string;
-  to: string;
-  value: string;
-  timeStamp: string;
-  isError: string;
-  blockNumber: string;
-};
-
-const getStatusBadge = (isError: string, confirmations: number) => {
+const getStatusBadge = (isError: string) => {
   if (isError === "1") {
     return <Badge variant="destructive">Failed</Badge>;
-  }
-  if (confirmations < 12) {
-    return <Badge variant="outline">Pending ({confirmations}/12)</Badge>;
   }
   return (
     <Badge
@@ -54,14 +40,7 @@ const getType = (tx: Transaction, address: string) => {
     if (from === self && to === self) return { type: "Self", Icon: RefreshCw, className: "text-accent-foreground" };
     if (from === self) return { type: "Sent", Icon: ArrowUpRight, className: "text-destructive" };
     if (to === self) return { type: "Received", Icon: ArrowDownLeft, className: "text-primary" };
-    // This case shouldn't happen if API is correct, but as a fallback
     return { type: "Contract", Icon: Star, className: "text-foreground" };
-}
-
-const formatValue = (value: string) => {
-    const number = parseFloat(value);
-    if (number > 1000) return `${(number / 10**18).toFixed(4)} ETH`;
-    return `${(number / 10**9).toPrecision(4)} Gwei`;
 }
 
 const groupTransactionsByMonth = (transactions: Transaction[]) => {
@@ -81,43 +60,7 @@ const groupTransactionsByMonth = (transactions: Transaction[]) => {
 
 const TransactionHistory = () => {
   const { address, isConnected } = useAccount();
-  const [transactions, setTransactions] = useState<Transaction[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (isConnected && address) {
-      const fetchTransactions = async () => {
-        setIsLoading(true);
-        setError(null);
-        try {
-          const response = await fetch(`/api/transactions?address=${address}`);
-          const data = await response.json();
-          if (!response.ok) {
-            throw new Error(data.message || 'Failed to fetch transactions.');
-          }
-          
-          if (data.status === "1") {
-            setTransactions(data.result);
-          } else {
-            setTransactions([]);
-            if (data.message !== 'No transactions found') {
-              setError(data.message);
-            }
-          }
-        } catch (e: any) {
-          setError(e.message || "An unexpected error occurred.");
-          setTransactions([]);
-        } finally {
-          setIsLoading(false);
-        }
-      };
-
-      fetchTransactions();
-    } else {
-      setTransactions([]);
-    }
-  }, [address, isConnected]);
+  const { transactions, isLoading, error } = useTransactions();
 
   const groupedTransactions = groupTransactionsByMonth(transactions);
   const transactionMonths = Object.keys(groupedTransactions);
@@ -181,7 +124,6 @@ const TransactionHistory = () => {
                               <p className={`font-semibold ${className}`}>
                                 {sign}{valueInEth.toFixed(5)} ETH
                               </p>
-                              {/* Add fiat value conversion here if available */}
                             </div>
                           </a>
                         )
@@ -202,4 +144,3 @@ const TransactionHistory = () => {
 };
 
 export default TransactionHistory;
-
