@@ -1,7 +1,6 @@
 "use client";
 
-import { ReownClient, mainnet } from "@reown/appkit";
-import { WagmiAdapter } from "@reown/appkit-adapter-wagmi";
+import { mainnet } from "viem/chains";
 import { WagmiProvider, createConfig, http } from "wagmi";
 import { walletConnect } from "wagmi/connectors";
 
@@ -24,10 +23,6 @@ const config = createConfig({
       showQrModal: true,
     }),
   ],
-});
-
-const client = new ReownClient({
-  adapter: new WagmiAdapter({ wagmi: { config } }),
 });
 
 export const Web3Provider = ({ children }: { children: React.ReactNode }) => {
