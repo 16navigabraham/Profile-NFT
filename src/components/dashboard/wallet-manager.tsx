@@ -26,7 +26,7 @@ import {
 } from "@/components/ui/dialog";
 import { useAccount, useConnect, useDisconnect, useEnsName } from "wagmi";
 import { TokenIcons } from "@/lib/icons";
-import { walletConnect } from 'wagmi/connectors';
+import { walletConnectConnector } from "../providers/web3-provider";
 
 const WalletManager = () => {
   const { toast } = useToast();
@@ -105,7 +105,7 @@ const WalletManager = () => {
                 <Button
                   className="w-full justify-start gap-4"
                   variant="outline"
-                  onClick={() => connect({ connector: walletConnect() })}
+                  onClick={() => connect({ connector: walletConnectConnector })}
                 >
                   <TokenIcons.walletconnect className="h-6 w-6" />
                   WalletConnect

@@ -7,23 +7,23 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 const projectId = process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID || "";
 
+export const walletConnectConnector = walletConnect({
+  projectId,
+  metadata: {
+    name: "Onchain Portfolio",
+    description: "Your shareable onchain resume.",
+    url: typeof window !== "undefined" ? window.location.host : "https://app.reown.io",
+    icons: ["https://app.reown.io/favicon.ico"],
+  },
+  showQrModal: true,
+});
+
 const config = createConfig({
   chains: [mainnet],
   transports: {
     [mainnet.id]: http(),
   },
-  connectors: [
-    walletConnect({
-      projectId,
-      metadata: {
-        name: "Onchain Portfolio",
-        description: "Your shareable onchain resume.",
-        url: typeof window !== "undefined" ? window.location.host : "https://app.reown.io",
-        icons: ["https://app.reown.io/favicon.ico"],
-      },
-      showQrModal: true,
-    }),
-  ],
+  connectors: [walletConnectConnector],
 });
 
 const queryClient = new QueryClient();
