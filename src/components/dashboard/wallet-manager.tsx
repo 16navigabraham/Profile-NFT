@@ -1,15 +1,14 @@
 "use client";
 
+import React from "react";
 import {
   Card,
   CardContent,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { wallets } from "@/lib/mock-data";
-import { TokenIcons } from "@/lib/icons";
 import { Button } from "@/components/ui/button";
-import { PlusCircle, MoreVertical, Copy } from "lucide-react";
+import { PlusCircle, MoreVertical, Copy, LogOut } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import {
   DropdownMenu,
@@ -25,9 +24,16 @@ import {
   DialogDescription,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import { useAccount, useConnect, useDisconnect, useEnsName } from "wagmi";
+import { TokenIcons } from "@/lib/icons";
+import { walletConnect } from 'wagmi/connectors';
 
 const WalletManager = () => {
   const { toast } = useToast();
+  const { address, isConnected, connector } = useAccount();
+  const { data: ensName } = useEnsName({ address });
+  const { connect } = useConnect();
+  const { disconnect } = useDisconnect();
 
   const copyAddress = (address: string) => {
     navigator.clipboard.writeText(address);
@@ -37,71 +43,87 @@ const WalletManager = () => {
     });
   };
 
+  const ConnectedWallet = () => {
+    if (!address) return null;
+    
+    const Icon = TokenIcons[connector?.name.toLowerCase() || "walletconnect"];
+
+    return (
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-4 overflow-hidden">
+          {Icon && <Icon className="h-8 w-8 text-primary flex-shrink-0" />}
+          <div className="overflow-hidden">
+            <p className="font-semibold truncate">{ensName || "Primary Wallet"}</p>
+            <p className="text-sm text-muted-foreground truncate">
+              {address}
+            </p>
+          </div>
+        </div>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" size="icon" className="h-8 w-8 flex-shrink-0">
+              <MoreVertical className="h-4 w-4" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem onClick={() => copyAddress(address)}>
+              <Copy className="mr-2 h-4 w-4" />
+              Copy Address
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => disconnect()}>
+              <LogOut className="mr-2 h-4 w-4" />
+              Disconnect
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
+    );
+  };
+  
   return (
     <Card className="bg-card border-border">
       <CardHeader className="flex flex-row items-center justify-between pb-4">
-        <CardTitle className="text-lg font-headline">Connected Wallets</CardTitle>
-        <Dialog>
-          <DialogTrigger asChild>
-            <Button variant="ghost" size="sm">
-              <PlusCircle className="mr-2 h-4 w-4 text-primary" />
-              Connect
-            </Button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Connect a new wallet</DialogTitle>
-              <DialogDescription>
-                Choose your wallet provider to continue. This is a mock UI.
-              </DialogDescription>
-            </DialogHeader>
-            <div className="grid gap-4 py-4">
-              <Button className="w-full justify-start gap-4" variant="outline">
-                <TokenIcons.metamask className="h-6 w-6" />
-                Metamask
+        <CardTitle className="text-lg font-headline">
+          {isConnected ? "Connected Wallet" : "Connected Wallets"}
+        </CardTitle>
+        {!isConnected && (
+          <Dialog>
+            <DialogTrigger asChild>
+              <Button variant="ghost" size="sm">
+                <PlusCircle className="mr-2 h-4 w-4 text-primary" />
+                Connect
               </Button>
-              <Button className="w-full justify-start gap-4" variant="outline">
-                <TokenIcons.walletconnect className="h-6 w-6" />
-                WalletConnect
-              </Button>
-            </div>
-          </DialogContent>
-        </Dialog>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Connect a new wallet</DialogTitle>
+                <DialogDescription>
+                  Choose your wallet provider to continue.
+                </DialogDescription>
+              </DialogHeader>
+              <div className="grid gap-4 py-4">
+                <Button
+                  className="w-full justify-start gap-4"
+                  variant="outline"
+                  onClick={() => connect({ connector: walletConnect() })}
+                >
+                  <TokenIcons.walletconnect className="h-6 w-6" />
+                  WalletConnect
+                </Button>
+              </div>
+            </DialogContent>
+          </Dialog>
+        )}
       </CardHeader>
       <CardContent>
         <div className="space-y-4">
-          {wallets.map((wallet) => {
-            const Icon = TokenIcons[wallet.provider];
-            return (
-              <div
-                key={wallet.address}
-                className="flex items-center justify-between"
-              >
-                <div className="flex items-center gap-4 overflow-hidden">
-                  {Icon && <Icon className="h-8 w-8 text-primary flex-shrink-0" />}
-                  <div className="overflow-hidden">
-                    <p className="font-semibold truncate">{wallet.name}</p>
-                    <p className="text-sm text-muted-foreground truncate">
-                      {wallet.address}
-                    </p>
-                  </div>
-                </div>
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="icon" className="h-8 w-8 flex-shrink-0">
-                      <MoreVertical className="h-4 w-4" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    <DropdownMenuItem onClick={() => copyAddress(wallet.address)}>
-                      <Copy className="mr-2 h-4 w-4" />
-                      Copy Address
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </div>
-            );
-          })}
+          {isConnected && address ? (
+            <ConnectedWallet />
+          ) : (
+            <p className="text-sm text-muted-foreground text-center py-4">
+              No wallet connected.
+            </p>
+          )}
         </div>
       </CardContent>
     </Card>
