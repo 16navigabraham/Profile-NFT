@@ -1,6 +1,8 @@
 
 "use client";
 
+import { useState, useEffect } from "react";
+import { useAccount } from "wagmi";
 import {
   Card,
   CardContent,
@@ -14,105 +16,57 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
-import { ArrowUpRight, ArrowDownLeft, RefreshCw, Star } from "lucide-react";
+import { ArrowUpRight, ArrowDownLeft, RefreshCw, Star, Loader2 } from "lucide-react";
+import { formatDistanceToNow } from "date-fns";
 
-// NOTE: This is temporary mock data to showcase the new timeline component.
-// It will be removed once real on-chain data is integrated.
-const transactions = [
-  {
-    id: "0xabc1",
-    type: "Sent",
-    asset: "ETH",
-    amount: "-0.5",
-    value: "-$1,500.00",
-    date: "2024-07-28",
-    status: "Completed",
-  },
-  {
-    id: "0xdef2",
-    type: "Received",
-    asset: "USDC",
-    amount: "+1,000",
-    value: "+$1,000.00",
-    date: "2024-07-27",
-    status: "Completed",
-  },
-  {
-    id: "0xghi3",
-    type: "Swap",
-    asset: "ETH to WETH",
-    amount: "1.0",
-    value: "$3,000.00",
-    date: "2024-06-15",
-    status: "Completed",
-  },
-  {
-    id: "0xjkl4",
-    type: "Minted",
-    asset: "NFT",
-    amount: "1",
-    value: "$150.00",
-    date: "2024-06-10",
-    status: "Completed",
-  },
-  {
-    id: "0xmno5",
-    type: "Staked",
-    asset: "LDO",
-    amount: "100",
-    value: "$250.00",
-    date: "2023-12-20",
-    status: "Completed",
-  },
-  {
-    id: "0xpqr6",
-    type: "Received",
-    asset: "ARB",
-    amount: "+500",
-    value: "+$450.00",
-    date: "2023-12-18",
-    status: "Completed",
-  },
-];
-
-const getStatusBadge = (status: string) => {
-  switch (status.toLowerCase()) {
-    case "completed":
-      return (
-        <Badge
-          variant="secondary"
-          className="border-primary/50 bg-primary/10 text-primary"
-        >
-          Completed
-        </Badge>
-      );
-    case "pending":
-      return <Badge variant="outline">Pending</Badge>;
-    default:
-      return <Badge variant="secondary">{status}</Badge>;
-  }
+type Transaction = {
+  hash: string;
+  from: string;
+  to: string;
+  value: string;
+  timeStamp: string;
+  isError: string;
+  blockNumber: string;
 };
 
-const getTypeIcon = (type: string) => {
-  const baseClass = "h-5 w-5 flex-shrink-0";
-  switch (type) {
-    case "Sent":
-      return <ArrowUpRight className={`${baseClass} text-destructive`} />;
-    case "Received":
-      return <ArrowDownLeft className={`${baseClass} text-primary`} />;
-    case "Swap":
-      return <RefreshCw className={`${baseClass} text-accent-foreground`} />;
-    case "Minted":
-    case "Staked":
-      return <Star className={`${baseClass} text-foreground`} />;
-    default:
-      return <div className={baseClass} />;
+const getStatusBadge = (isError: string, confirmations: number) => {
+  if (isError === "1") {
+    return <Badge variant="destructive">Failed</Badge>;
   }
+  if (confirmations < 12) {
+    return <Badge variant="outline">Pending ({confirmations}/12)</Badge>;
+  }
+  return (
+    <Badge
+      variant="secondary"
+      className="border-primary/50 bg-primary/10 text-primary"
+    >
+      Completed
+    </Badge>
+  );
 };
 
-const groupTransactionsByMonth = (transactions: any[]) => {
+const getType = (tx: Transaction, address: string) => {
+    const from = tx.from.toLowerCase();
+    const to = tx.to.toLowerCase();
+    const self = address.toLowerCase();
+
+    if (from === self && to === self) return { type: "Self", Icon: RefreshCw, className: "text-accent-foreground" };
+    if (from === self) return { type: "Sent", Icon: ArrowUpRight, className: "text-destructive" };
+    if (to === self) return { type: "Received", Icon: ArrowDownLeft, className: "text-primary" };
+    // This case shouldn't happen if API is correct, but as a fallback
+    return { type: "Contract", Icon: Star, className: "text-foreground" };
+}
+
+const formatValue = (value: string) => {
+    const number = parseFloat(value);
+    if (number > 1000) return `${(number / 10**18).toFixed(4)} ETH`;
+    return `${(number / 10**9).toPrecision(4)} Gwei`;
+}
+
+const groupTransactionsByMonth = (transactions: Transaction[]) => {
   return transactions.reduce((acc, tx) => {
-    const date = new Date(tx.date);
+    const date = new Date(parseInt(tx.timeStamp) * 1000);
     const month = date.toLocaleString("default", {
       month: "long",
       year: "numeric",
@@ -122,10 +76,48 @@ const groupTransactionsByMonth = (transactions: any[]) => {
     }
     acc[month].push(tx);
     return acc;
-  }, {} as Record<string, any[]>);
+  }, {} as Record<string, Transaction[]>);
 };
 
 const TransactionHistory = () => {
+  const { address, isConnected } = useAccount();
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (isConnected && address) {
+      const fetchTransactions = async () => {
+        setIsLoading(true);
+        setError(null);
+        try {
+          const response = await fetch(`/api/transactions?address=${address}`);
+          if (!response.ok) {
+            throw new Error('Failed to fetch transactions.');
+          }
+          const data = await response.json();
+          if (data.status === "1") {
+            setTransactions(data.result);
+          } else {
+            setTransactions([]);
+            if (data.message !== 'No transactions found') {
+              setError(data.message);
+            }
+          }
+        } catch (e: any) {
+          setError(e.message || "An unexpected error occurred.");
+          setTransactions([]);
+        } finally {
+          setIsLoading(false);
+        }
+      };
+
+      fetchTransactions();
+    } else {
+      setTransactions([]);
+    }
+  }, [address, isConnected]);
+
   const groupedTransactions = groupTransactionsByMonth(transactions);
   const transactionMonths = Object.keys(groupedTransactions);
 
@@ -135,7 +127,19 @@ const TransactionHistory = () => {
         <CardTitle className="font-headline">Transaction History</CardTitle>
       </CardHeader>
       <CardContent>
-        {transactions.length > 0 ? (
+        {isLoading ? (
+          <div className="flex justify-center items-center min-h-[240px]">
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          </div>
+        ) : !isConnected ? (
+          <div className="flex justify-center items-center min-h-[240px]">
+            <p className="text-muted-foreground">Connect your wallet to view transactions.</p>
+          </div>
+        ) : error ? (
+           <div className="flex justify-center items-center min-h-[240px]">
+            <p className="text-destructive text-center">Error fetching transactions: {error}</p>
+          </div>
+        ) : transactions.length > 0 ? (
           <Accordion
             type="multiple"
             defaultValue={transactionMonths.slice(0, 1)}
@@ -148,43 +152,39 @@ const TransactionHistory = () => {
                 </AccordionTrigger>
                 <AccordionContent>
                   <div className="space-y-4 pt-2">
-                    {groupedTransactions[month].map((tx) => (
-                      <div
-                        key={tx.id}
-                        className="flex items-center justify-between p-3 rounded-lg bg-background/50 hover:bg-muted/50 transition-colors"
-                      >
-                        <div className="flex items-center gap-4">
-                          <div className="p-2 bg-muted rounded-full">
-                            {getTypeIcon(tx.type)}
-                          </div>
-                          <div>
-                            <p className="font-semibold">{tx.type}</p>
-                            <p className="text-sm text-muted-foreground">
-                              {tx.asset}
-                            </p>
-                          </div>
-                        </div>
-                        <div className="text-right">
-                          <p
-                            className={`font-semibold ${
-                              tx.amount.startsWith("+")
-                                ? "text-primary"
-                                : tx.amount.startsWith("-")
-                                ? "text-destructive"
-                                : ""
-                            }`}
+                    {groupedTransactions[month].map((tx) => {
+                        const { type, Icon, className } = getType(tx, address!);
+                        const valueInEth = parseFloat(tx.value) / 10**18;
+                        const sign = type === "Sent" ? "-" : type === "Received" ? "+" : "";
+
+                        return (
+                          <a
+                            key={tx.hash}
+                            href={`https://etherscan.io/tx/${tx.hash}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex items-center justify-between p-3 rounded-lg bg-background/50 hover:bg-muted/50 transition-colors"
                           >
-                            {tx.amount}{" "}
-                            {tx.asset.includes(" ")
-                              ? ""
-                              : tx.asset.split(" ")[0]}
-                          </p>
-                          <p className="text-sm text-muted-foreground">
-                            {tx.value}
-                          </p>
-                        </div>
-                      </div>
-                    ))}
+                            <div className="flex items-center gap-4">
+                              <div className="p-2 bg-muted rounded-full">
+                                <Icon className={`h-5 w-5 flex-shrink-0 ${className}`} />
+                              </div>
+                              <div>
+                                <p className="font-semibold">{type}</p>
+                                <p className="text-sm text-muted-foreground">
+                                  {formatDistanceToNow(new Date(parseInt(tx.timeStamp) * 1000), { addSuffix: true })}
+                                </p>
+                              </div>
+                            </div>
+                            <div className="text-right">
+                              <p className={`font-semibold ${className}`}>
+                                {sign}{valueInEth.toFixed(5)} ETH
+                              </p>
+                              {/* Add fiat value conversion here if available */}
+                            </div>
+                          </a>
+                        )
+                    })}
                   </div>
                 </AccordionContent>
               </AccordionItem>
@@ -192,7 +192,7 @@ const TransactionHistory = () => {
           </Accordion>
         ) : (
           <div className="flex justify-center items-center min-h-[240px]">
-            <p className="text-muted-foreground">No transactions found.</p>
+            <p className="text-muted-foreground">No transactions found for this address.</p>
           </div>
         )}
       </CardContent>
@@ -201,3 +201,4 @@ const TransactionHistory = () => {
 };
 
 export default TransactionHistory;
+
