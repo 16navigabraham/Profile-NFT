@@ -14,16 +14,20 @@ import { generateOnchainStory } from "@/ai/flows/generate-onchain-story";
 import { wallets, transactions, topTokens, topNfts } from "@/lib/mock-data";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
+import { useAccount } from "wagmi";
 
 const OnchainStory = () => {
   const [story, setStory] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
+  const { isConnected } = useAccount();
+
 
   const handleGenerateStory = async () => {
     setIsLoading(true);
     setStory("");
     try {
+      // NOTE: In a real app, you'd fetch this data from onchain sources
       const input = {
         walletAddresses: wallets.map((w) => w.address),
         transactionHistory: transactions
@@ -55,7 +59,7 @@ const OnchainStory = () => {
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
-        <Button onClick={handleGenerateStory} disabled={isLoading}>
+        <Button onClick={handleGenerateStory} disabled={isLoading || !isConnected}>
           <Sparkles className="mr-2 h-4 w-4" />
           {isLoading ? "Generating..." : "Generate with AI"}
         </Button>

@@ -58,43 +58,49 @@ const TransactionHistory = () => {
         <CardTitle className="font-headline">Transaction History</CardTitle>
       </CardHeader>
       <CardContent className="overflow-x-auto">
-        <Table>
-          <TableHeader>
-            <TableRow className="border-border hover:bg-transparent">
-              <TableHead>Type</TableHead>
-              <TableHead>Asset</TableHead>
-              <TableHead className="text-right">Amount</TableHead>
-              <TableHead className="text-right hidden sm:table-cell">
-                Value
-              </TableHead>
-              <TableHead className="hidden md:table-cell">Date</TableHead>
-              <TableHead className="text-right">Status</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {transactions.map((tx) => (
-              <TableRow key={tx.id} className="border-border">
-                <TableCell>
-                  <div className="flex items-center gap-2 font-medium">
-                    {getTypeIcon(tx.type)}
-                    <span>{tx.type}</span>
-                  </div>
-                </TableCell>
-                <TableCell className="font-medium">{tx.asset}</TableCell>
-                <TableCell className="text-right">{tx.amount}</TableCell>
-                <TableCell className="text-right hidden sm:table-cell">
-                  {tx.value}
-                </TableCell>
-                <TableCell className="text-muted-foreground hidden md:table-cell">
-                  {tx.date}
-                </TableCell>
-                <TableCell className="text-right">
-                  {getStatusBadge(tx.status)}
-                </TableCell>
+        {transactions.length > 0 ? (
+          <Table>
+            <TableHeader>
+              <TableRow className="border-border hover:bg-transparent">
+                <TableHead>Type</TableHead>
+                <TableHead>Asset</TableHead>
+                <TableHead className="text-right">Amount</TableHead>
+                <TableHead className="text-right hidden sm:table-cell">
+                  Value
+                </TableHead>
+                <TableHead className="hidden md:table-cell">Date</TableHead>
+                <TableHead className="text-right">Status</TableHead>
               </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+            </TableHeader>
+            <TableBody>
+              {transactions.map((tx) => (
+                <TableRow key={tx.id} className="border-border">
+                  <TableCell>
+                    <div className="flex items-center gap-2 font-medium">
+                      {getTypeIcon(tx.type)}
+                      <span>{tx.type}</span>
+                    </div>
+                  </TableCell>
+                  <TableCell className="font-medium">{tx.asset}</TableCell>
+                  <TableCell className="text-right">{tx.amount}</TableCell>
+                  <TableCell className="text-right hidden sm:table-cell">
+                    {tx.value}
+                  </TableCell>
+                  <TableCell className="text-muted-foreground hidden md:table-cell">
+                    {tx.date}
+                  </TableCell>
+                  <TableCell className="text-right">
+                    {getStatusBadge(tx.status)}
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        ) : (
+          <div className="flex justify-center items-center min-h-[240px]">
+            <p className="text-muted-foreground">No transactions found.</p>
+          </div>
+        )}
       </CardContent>
     </Card>
   );

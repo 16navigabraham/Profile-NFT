@@ -33,27 +33,33 @@ const GasAnalysis = () => {
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <ChartContainer config={chartConfig} className="min-h-[200px] w-full">
-          <BarChart accessibilityLayer data={gasSpending}>
-            <XAxis
-              dataKey="month"
-              tickLine={false}
-              tickMargin={10}
-              axisLine={false}
-              stroke="hsl(var(--muted-foreground))"
-              fontSize={12}
-            />
-            <YAxis
-              tickLine={false}
-              axisLine={false}
-              stroke="hsl(var(--muted-foreground))"
-              fontSize={12}
-              tickFormatter={(value) => `$${value}`}
-            />
-            <ChartTooltip cursor={false} content={<ChartTooltipContent />} />
-            <Bar dataKey="spent" fill="var(--color-spent)" radius={4} />
-          </BarChart>
-        </ChartContainer>
+        {gasSpending.length > 0 ? (
+          <ChartContainer config={chartConfig} className="min-h-[200px] w-full">
+            <BarChart accessibilityLayer data={gasSpending}>
+              <XAxis
+                dataKey="month"
+                tickLine={false}
+                tickMargin={10}
+                axisLine={false}
+                stroke="hsl(var(--muted-foreground))"
+                fontSize={12}
+              />
+              <YAxis
+                tickLine={false}
+                axisLine={false}
+                stroke="hsl(var(--muted-foreground))"
+                fontSize={12}
+                tickFormatter={(value) => `$${value}`}
+              />
+              <ChartTooltip cursor={false} content={<ChartTooltipContent />} />
+              <Bar dataKey="spent" fill="var(--color-spent)" radius={4} />
+            </BarChart>
+          </ChartContainer>
+        ) : (
+          <div className="flex justify-center items-center min-h-[200px]">
+            <p className="text-muted-foreground">No gas spending data available.</p>
+          </div>
+        )}
       </CardContent>
     </Card>
   );
