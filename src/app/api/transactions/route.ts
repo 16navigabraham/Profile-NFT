@@ -24,7 +24,8 @@ export async function GET(request: NextRequest) {
       return NextResponse.json(data);
     } else {
       // Etherscan API returns a message when there's an error (e.g., invalid key, rate limit)
-      const errorMessage = data.message || 'An unknown error occurred with the Etherscan API.';
+      const errorMessage = data.message || data.result || 'An unknown error occurred with the Etherscan API.';
+      
       // Specifically check for common error messages to provide better feedback.
       if (data.result && typeof data.result === 'string' && data.result.includes('Invalid API Key')) {
           return NextResponse.json({ message: `Etherscan API Error: Invalid API Key. Please check your API key.` }, { status: 500 });
@@ -33,9 +34,9 @@ export async function GET(request: NextRequest) {
          return NextResponse.json({ message: `Etherscan API Error: Rate limit exceeded. Please check your API plan or wait a moment.` }, { status: 429 });
       }
        if (data.result && typeof data.result === 'string' && data.result.includes('V1 endpoint')) {
-        return NextResponse.json({ message: `Etherscan API Error: ${data.result}.` }, { status: 500 });
+        return NextResponse.json({ message: `Etherscan API Error: ${data.result}. Please check your API key and plan limits.` }, { status: 500 });
       }
-      return NextResponse.json({ message: errorMessage }, { status: 500 });
+      return NextResponse.json({ message: errorMessage }, { status: response.status });
     }
   } catch (error: any) {
     return NextResponse.json({ message: error.message || 'Failed to fetch data from Etherscan' }, { status: 500 });
