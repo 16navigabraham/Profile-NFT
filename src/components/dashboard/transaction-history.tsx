@@ -92,10 +92,11 @@ const TransactionHistory = () => {
         setError(null);
         try {
           const response = await fetch(`/api/transactions?address=${address}`);
-          if (!response.ok) {
-            throw new Error('Failed to fetch transactions.');
-          }
           const data = await response.json();
+          if (!response.ok) {
+            throw new Error(data.message || 'Failed to fetch transactions.');
+          }
+          
           if (data.status === "1") {
             setTransactions(data.result);
           } else {
