@@ -1,7 +1,5 @@
 "use client";
 
-import { Bar, BarChart, XAxis, YAxis } from "recharts";
-import { type ChartConfig } from "@/components/ui/chart";
 import {
   Card,
   CardContent,
@@ -9,21 +7,11 @@ import {
   CardTitle,
   CardDescription,
 } from "@/components/ui/card";
-import {
-  ChartContainer,
-  ChartTooltip,
-  ChartTooltipContent,
-} from "@/components/ui/chart";
-import { gasSpending } from "@/lib/mock-data";
-
-const chartConfig = {
-  spent: {
-    label: "Gas Spent ($)",
-    color: "hsl(var(--primary))",
-  },
-} satisfies ChartConfig;
+import { useAccount } from "wagmi";
+import { AlertCircle } from "lucide-react";
 
 const GasAnalysis = () => {
+  const { isConnected } = useAccount();
   return (
     <Card className="bg-card border-border">
       <CardHeader>
@@ -33,31 +21,19 @@ const GasAnalysis = () => {
         </CardDescription>
       </CardHeader>
       <CardContent>
-        {gasSpending.length > 0 ? (
-          <ChartContainer config={chartConfig} className="min-h-[200px] w-full">
-            <BarChart accessibilityLayer data={gasSpending}>
-              <XAxis
-                dataKey="month"
-                tickLine={false}
-                tickMargin={10}
-                axisLine={false}
-                stroke="hsl(var(--muted-foreground))"
-                fontSize={12}
-              />
-              <YAxis
-                tickLine={false}
-                axisLine={false}
-                stroke="hsl(var(--muted-foreground))"
-                fontSize={12}
-                tickFormatter={(value) => `$${value}`}
-              />
-              <ChartTooltip cursor={false} content={<ChartTooltipContent />} />
-              <Bar dataKey="spent" fill="var(--color-spent)" radius={4} />
-            </BarChart>
-          </ChartContainer>
-        ) : (
+        {!isConnected ? (
           <div className="flex justify-center items-center min-h-[200px]">
-            <p className="text-muted-foreground">No gas spending data available.</p>
+            <p className="text-muted-foreground">
+              Connect your wallet to analyze gas spending.
+            </p>
+          </div>
+        ) : (
+          <div className="flex flex-col items-center justify-center text-center text-muted-foreground min-h-[200px] p-4 rounded-lg bg-background/30">
+            <AlertCircle className="h-8 w-8 mb-2" />
+            <p className="text-sm font-medium">Gas Analysis Coming Soon</p>
+            <p className="text-xs">
+              We're working on adding support for gas fee analysis.
+            </p>
           </div>
         )}
       </CardContent>

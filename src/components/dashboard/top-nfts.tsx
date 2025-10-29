@@ -1,3 +1,5 @@
+"use client";
+
 import {
   Card,
   CardContent,
@@ -5,11 +7,11 @@ import {
   CardTitle,
   CardDescription,
 } from "@/components/ui/card";
-import { topNfts } from "@/lib/mock-data";
-import Image from "next/image";
-import { Switch } from "@/components/ui/switch";
+import { AlertCircle } from "lucide-react";
+import { useAccount } from "wagmi";
 
 const TopNfts = () => {
+  const { isConnected } = useAccount();
   return (
     <Card className="bg-card border-border">
       <CardHeader>
@@ -19,39 +21,19 @@ const TopNfts = () => {
         </CardDescription>
       </CardHeader>
       <CardContent>
-        {topNfts.length > 0 ? (
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4">
-            {topNfts.map((nft) => (
-              <div key={nft.name} className="relative group">
-                <Card className="overflow-hidden border-border transition-all group-hover:shadow-lg group-hover:shadow-primary/10 group-hover:-translate-y-1">
-                  <Image
-                    src={nft.image.imageUrl}
-                    alt={nft.name}
-                    width={400}
-                    height={400}
-                    className="aspect-square object-cover transition-transform group-hover:scale-105"
-                    data-ai-hint={nft.image.imageHint}
-                  />
-                </Card>
-                <div className="mt-2">
-                  <p className="font-semibold truncate text-sm">{nft.name}</p>
-                  <p className="text-xs text-muted-foreground truncate">
-                    {nft.collection}
-                  </p>
-                </div>
-                <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                  <Switch
-                    id={`nft-switch-${nft.name.replace(/\s/g, "-")}`}
-                    defaultChecked={true}
-                    aria-label={`Show ${nft.name} on profile`}
-                  />
-                </div>
-              </div>
-            ))}
+        {!isConnected ? (
+          <div className="flex justify-center items-center min-h-[200px]">
+            <p className="text-muted-foreground">
+              Connect your wallet to see your top NFTs.
+            </p>
           </div>
         ) : (
-          <div className="flex justify-center items-center min-h-[200px]">
-            <p className="text-muted-foreground">No NFTs found.</p>
+          <div className="flex flex-col items-center justify-center text-center text-muted-foreground min-h-[200px] p-4 rounded-lg bg-background/30">
+            <AlertCircle className="h-8 w-8 mb-2" />
+            <p className="text-sm font-medium">Top NFTs Coming Soon</p>
+            <p className="text-xs">
+              We're working on adding support for fetching your NFT collections.
+            </p>
           </div>
         )}
       </CardContent>
