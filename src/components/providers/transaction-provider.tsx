@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
+import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback, useRef } from "react";
 import { useAccount } from "wagmi";
 
 export type Transaction = {
@@ -27,18 +27,22 @@ export const TransactionProvider = ({ children }: { children: ReactNode }) => {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const isFetching = useRef(false);
 
-  const fetchTransactions = async () => {
-    if (!address) {
-      setTransactions([]);
+  const fetchTransactions = useCallback(async () => {
+    if (!address || isFetching.current) {
+      if (!address) setTransactions([]);
       return;
     };
     
+    isFetching.current = true;
     setIsLoading(true);
     setError(null);
+
     try {
       const response = await fetch(`/api/transactions?address=${address}&page=1&offset=100`);
       const data = await response.json();
+
       if (!response.ok) {
         throw new Error(data.message || 'Failed to fetch transactions.');
       }
@@ -47,7 +51,7 @@ export const TransactionProvider = ({ children }: { children: ReactNode }) => {
         setTransactions(data.result);
       } else {
         setTransactions([]);
-        if (data.message !== 'No transactions found') {
+        if (data.message !== 'No transactions found' && data.result) {
           setError(data.message || data.result);
         }
       }
@@ -56,16 +60,19 @@ export const TransactionProvider = ({ children }: { children: ReactNode }) => {
       setTransactions([]);
     } finally {
       setIsLoading(false);
+      isFetching.current = false;
     }
-  };
+  }, [address]);
   
   useEffect(() => {
     if (isConnected && address) {
       fetchTransactions();
     } else {
       setTransactions([]);
+      setError(null);
+      setIsLoading(false);
     }
-  }, [address, isConnected]);
+  }, [address, isConnected, fetchTransactions]);
 
   const value = {
     transactions,
