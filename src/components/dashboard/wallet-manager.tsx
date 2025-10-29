@@ -26,7 +26,7 @@ import {
 } from "@/components/ui/dialog";
 import { useAccount, useConnect, useDisconnect, useEnsName } from "wagmi";
 import { TokenIcons } from "@/lib/icons";
-import { walletConnectConnector } from "../providers/web3-provider";
+import { walletConnectConnector, injectedConnector } from "../providers/web3-provider";
 
 const WalletManager = () => {
   const { toast } = useToast();
@@ -102,6 +102,14 @@ const WalletManager = () => {
                 </DialogDescription>
               </DialogHeader>
               <div className="grid gap-4 py-4">
+                 <Button
+                  className="w-full justify-start gap-4"
+                  variant="outline"
+                  onClick={() => connect({ connector: injectedConnector })}
+                >
+                  <TokenIcons.metamask className="h-6 w-6" />
+                  Browser Wallet
+                </Button>
                 <Button
                   className="w-full justify-start gap-4"
                   variant="outline"

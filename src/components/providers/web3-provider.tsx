@@ -2,7 +2,7 @@
 
 import { mainnet } from "viem/chains";
 import { WagmiProvider, createConfig, http } from "wagmi";
-import { walletConnect } from "wagmi/connectors";
+import { injected, walletConnect } from "wagmi/connectors";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 const projectId = process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID || "";
@@ -18,12 +18,14 @@ export const walletConnectConnector = walletConnect({
   showQrModal: true,
 });
 
+export const injectedConnector = injected();
+
 const config = createConfig({
   chains: [mainnet],
   transports: {
     [mainnet.id]: http(),
   },
-  connectors: [walletConnectConnector],
+  connectors: [walletConnectConnector, injectedConnector],
 });
 
 const queryClient = new QueryClient();
