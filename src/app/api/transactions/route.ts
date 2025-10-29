@@ -25,9 +25,15 @@ export async function GET(request: NextRequest) {
     } else {
       // Etherscan API returns a message when there's an error (e.g., invalid key, rate limit)
       const errorMessage = data.message || 'An unknown error occurred with the Etherscan API.';
-      // Specifically check for "NOTOK" which can mean rate-limit issues.
-      if (data.result === 'Error! Invalid API Key' || data.message === 'NOTOK') {
-          return NextResponse.json({ message: `Etherscan API Error: ${data.result || errorMessage}. Please check your API key and plan limits.` }, { status: 500 });
+      // Specifically check for common error messages to provide better feedback.
+      if (data.result && typeof data.result === 'string' && data.result.includes('Invalid API Key')) {
+          return NextResponse.json({ message: `Etherscan API Error: Invalid API Key. Please check your API key.` }, { status: 500 });
+      }
+      if (data.message === 'NOTOK' || (data.result && typeof data.result === 'string' && data.result.includes('rate limit'))) {
+         return NextResponse.json({ message: `Etherscan API Error: Rate limit exceeded. Please check your API plan or wait a moment.` }, { status: 429 });
+      }
+       if (data.result && typeof data.result === 'string' && data.result.includes('V1 endpoint')) {
+        return NextResponse.json({ message: `Etherscan API Error: ${data.result}.` }, { status: 500 });
       }
       return NextResponse.json({ message: errorMessage }, { status: 500 });
     }
