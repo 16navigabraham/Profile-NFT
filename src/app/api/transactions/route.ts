@@ -7,11 +7,11 @@ export async function GET(request: NextRequest) {
   const apiKey = process.env.ETHERSCAN_API_KEY;
 
   if (!address) {
-    return NextResponse.json({ error: 'Address is required' }, { status: 400 });
+    return NextResponse.json({ message: 'Address is required' }, { status: 400 });
   }
 
   if (!apiKey) {
-    return NextResponse.json({ error: 'Etherscan API key is not configured.' }, { status: 500 });
+    return NextResponse.json({ message: 'Etherscan API key is not configured. Please add ETHERSCAN_API_KEY to your .env file.' }, { status: 500 });
   }
   
   const url = `https://api.etherscan.io/api?module=account&action=txlist&address=${address}&startblock=0&endblock=99999999&page=1&offset=100&sort=desc&apikey=${apiKey}`;
@@ -24,6 +24,6 @@ export async function GET(request: NextRequest) {
     const data = await response.json();
     return NextResponse.json(data);
   } catch (error: any) {
-    return NextResponse.json({ error: error.message || 'Failed to fetch data from Etherscan' }, { status: 500 });
+    return NextResponse.json({ message: error.message || 'Failed to fetch data from Etherscan' }, { status: 500 });
   }
 }
