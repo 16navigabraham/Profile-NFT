@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useMemo } from "react";
@@ -27,12 +28,28 @@ import {
 } from "date-fns";
 import { cn } from "@/lib/utils";
 import { getMonthName } from "@/lib/date-utils";
+import { Skeleton } from "../ui/skeleton";
 
 type HeatmapData = {
   [date: string]: {
     count: number;
   };
 };
+
+const HeatmapSkeleton = () => (
+  <div className="flex gap-2 overflow-x-auto pb-4">
+    {Array.from({ length: 6 }).map((_, i) => (
+      <div key={i} className="flex flex-col gap-2 min-w-max">
+        <Skeleton className="h-4 w-8 mx-auto" />
+        <div className="grid grid-flow-col grid-rows-7 gap-1">
+          {Array.from({ length: 35 }).map((_, j) => (
+            <Skeleton key={j} className="h-3 w-3 rounded-sm" />
+          ))}
+        </div>
+      </div>
+    ))}
+  </div>
+);
 
 const TransactionHeatmap = () => {
   const { isConnected } = useAccount();
@@ -93,16 +110,14 @@ const TransactionHeatmap = () => {
       </CardHeader>
       <CardContent>
         {!isConnected ? (
-          <div className="flex justify-center items-center min-h-[200px]">
+          <div className="flex justify-center items-center min-h-[140px]">
             <p className="text-muted-foreground">
               Connect wallet to see your activity.
             </p>
           </div>
         ) : isLoading ? (
-          <div className="grid grid-flow-col grid-rows-7 gap-1">
-             {Array.from({ length: 365 }).map((_, i) => (
-               <div key={i} className="h-3 w-3 rounded-sm bg-muted/50" />
-            ))}
+          <div className="h-[140px] flex items-center">
+            <HeatmapSkeleton />
           </div>
         ) : (
           <TooltipProvider>

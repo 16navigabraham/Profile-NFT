@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useMemo, useState } from "react";
@@ -17,6 +18,8 @@ import { PieChart, Pie, Cell, Sector } from "recharts";
 import { useAccount } from "wagmi";
 import { topTokens as mockTokens } from "@/lib/mock-data";
 import { cn } from "@/lib/utils";
+import { Skeleton } from "../ui/skeleton";
+import { useTransactions } from "../providers/transaction-provider";
 
 const chartConfig = {
   value: {
@@ -28,8 +31,16 @@ const chartConfig = {
   }, {} as any),
 };
 
+const TokenPortfolioChartSkeleton = () => (
+    <div className="h-[300px] flex items-center justify-center">
+        <Skeleton className="h-[240px] w-[240px] rounded-full" />
+    </div>
+);
+
+
 const TokenPortfolioChart = () => {
   const { isConnected } = useAccount();
+  const { isLoading: isTxLoading } = useTransactions();
   const [activeIndex, setActiveIndex] = useState<number | null>(null);
 
   const totalValue = useMemo(() => {
@@ -77,6 +88,9 @@ const TokenPortfolioChart = () => {
     );
   };
 
+  if (isTxLoading) {
+      return <TokenPortfolioChartSkeleton />
+  }
 
   if (!isConnected) {
     return (

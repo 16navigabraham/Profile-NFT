@@ -1,8 +1,9 @@
 
 "use client";
 
-import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback, useRef } from "react";
+import React, { createContext, useContext, ReactNode } from "react";
 import { useAccount } from "wagmi";
+import { useQuery } from "@tanstack/react-query";
 
 export type Transaction = {
   hash: string;
@@ -23,65 +24,44 @@ interface TransactionContextType {
 
 const TransactionContext = createContext<TransactionContextType | undefined>(undefined);
 
+const fetchTransactions = async (address?: string, chainId?: number): Promise<Transaction[]> => {
+    if (!address || !chainId) {
+        return [];
+    }
+
+    const response = await fetch(`/api/transactions?address=${address}&chainId=${chainId}&page=1&offset=100`);
+    const data = await response.json();
+
+    if (!response.ok) {
+        throw new Error(data.message || 'Failed to fetch transactions.');
+    }
+    
+    if (data.status === "1") {
+        return data.result;
+    } else {
+        if (data.message !== 'No transactions found' && data.result) {
+          throw new Error(data.message || data.result);
+        }
+        return []; // Return empty array for "No transactions found"
+    }
+};
+
+
 export const TransactionProvider = ({ children }: { children: ReactNode }) => {
   const { address, isConnected, chainId } = useAccount();
-  const [transactions, setTransactions] = useState<Transaction[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const isFetching = useRef(false);
 
-  const fetchTransactions = useCallback(async (currentAddress: string, currentChainId: number) => {
-    if (isFetching.current) return;
-    
-    isFetching.current = true;
-    setIsLoading(true);
-    setError(null);
-
-    try {
-      const response = await fetch(`/api/transactions?address=${currentAddress}&chainId=${currentChainId}&page=1&offset=100`);
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.message || 'Failed to fetch transactions.');
-      }
-      
-      if (data.status === "1") {
-        setTransactions(data.result);
-      } else {
-        setTransactions([]);
-        if (data.message !== 'No transactions found' && data.result) {
-          setError(data.message || data.result);
-        }
-      }
-    } catch (e: any) {
-      setError(e.message || "An unexpected error occurred.");
-      setTransactions([]);
-    } finally {
-      setIsLoading(false);
-      isFetching.current = false;
-    }
-  }, []);
-  
-  useEffect(() => {
-    if (isConnected && address && chainId) {
-      fetchTransactions(address, chainId);
-    } else {
-      setTransactions([]);
-      setError(null);
-      setIsLoading(false);
-    }
-  }, [address, isConnected, chainId, fetchTransactions]);
-
-  const refetch = useCallback(() => {
-    if (isConnected && address && chainId) {
-      fetchTransactions(address, chainId);
-    }
-  }, [isConnected, address, chainId, fetchTransactions]);
+  const { data: transactions, isLoading, error, refetch } = useQuery<Transaction[], Error>({
+      queryKey: ['transactions', address, chainId],
+      queryFn: () => fetchTransactions(address, chainId),
+      enabled: isConnected && !!address && !!chainId,
+      staleTime: 1000 * 60 * 5, // 5 minutes
+      refetchOnWindowFocus: false,
+  });
 
   const value = {
-    transactions,
+    transactions: transactions || [],
     isLoading,
-    error,
+    error: error?.message || null,
     refetch,
   };
 

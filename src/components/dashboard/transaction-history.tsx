@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useAccount } from "wagmi";
@@ -14,9 +15,10 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
-import { ArrowUpRight, ArrowDownLeft, RefreshCw, Star, Loader2 } from "lucide-react";
+import { ArrowUpRight, ArrowDownLeft, RefreshCw, Star } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { useTransactions, type Transaction } from "@/components/providers/transaction-provider";
+import { Skeleton } from "../ui/skeleton";
 
 const getStatusBadge = (isError: string) => {
   if (isError === "1") {
@@ -58,6 +60,33 @@ const groupTransactionsByMonth = (transactions: Transaction[]) => {
   }, {} as Record<string, Transaction[]>);
 };
 
+const TransactionHistorySkeleton = () => (
+  <div className="space-y-4">
+    {Array.from({ length: 3 }).map((_, i) => (
+      <div key={i}>
+        <Skeleton className="h-8 w-1/3 mb-4" />
+        <div className="space-y-4">
+          {Array.from({ length: 2 }).map((_, j) => (
+            <div key={j} className="flex items-center justify-between p-3">
+              <div className="flex items-center gap-4">
+                <Skeleton className="h-10 w-10 rounded-full" />
+                <div className="space-y-2">
+                  <Skeleton className="h-4 w-20" />
+                  <Skeleton className="h-3 w-24" />
+                </div>
+              </div>
+              <div className="space-y-2 text-right">
+                <Skeleton className="h-4 w-24" />
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    ))}
+  </div>
+);
+
+
 const TransactionHistory = () => {
   const { address, isConnected } = useAccount();
   const { transactions, isLoading, error } = useTransactions();
@@ -72,9 +101,7 @@ const TransactionHistory = () => {
       </CardHeader>
       <CardContent>
         {isLoading ? (
-          <div className="flex justify-center items-center min-h-[240px]">
-            <Loader2 className="h-8 w-8 animate-spin text-primary" />
-          </div>
+          <TransactionHistorySkeleton />
         ) : !isConnected ? (
           <div className="flex justify-center items-center min-h-[240px]">
             <p className="text-muted-foreground">Connect your wallet to view transactions.</p>
