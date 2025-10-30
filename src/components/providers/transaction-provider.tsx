@@ -23,14 +23,14 @@ interface TransactionContextType {
 const TransactionContext = createContext<TransactionContextType | undefined>(undefined);
 
 export const TransactionProvider = ({ children }: { children: ReactNode }) => {
-  const { address, isConnected } = useAccount();
+  const { address, isConnected, chainId } = useAccount();
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const isFetching = useRef(false);
 
   const fetchTransactions = useCallback(async () => {
-    if (!address || isFetching.current) {
+    if (!address || isFetching.current || !chainId) {
       if (!address) setTransactions([]);
       return;
     };
@@ -40,7 +40,7 @@ export const TransactionProvider = ({ children }: { children: ReactNode }) => {
     setError(null);
 
     try {
-      const response = await fetch(`/api/transactions?address=${address}&page=1&offset=100`);
+      const response = await fetch(`/api/transactions?address=${address}&chainId=${chainId}&page=1&offset=100`);
       const data = await response.json();
 
       if (!response.ok) {
@@ -62,7 +62,7 @@ export const TransactionProvider = ({ children }: { children: ReactNode }) => {
       setIsLoading(false);
       isFetching.current = false;
     }
-  }, [address]);
+  }, [address, chainId]);
   
   useEffect(() => {
     if (isConnected && address) {
@@ -72,7 +72,7 @@ export const TransactionProvider = ({ children }: { children: ReactNode }) => {
       setError(null);
       setIsLoading(false);
     }
-  }, [address, isConnected, fetchTransactions]);
+  }, [address, isConnected, fetchTransactions, chainId]);
 
   const value = {
     transactions,

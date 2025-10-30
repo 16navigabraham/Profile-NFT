@@ -1,6 +1,6 @@
 "use client";
 
-import { mainnet } from "viem/chains";
+import { mainnet, base, polygon, celo } from "viem/chains";
 import { WagmiProvider, createConfig, http } from "wagmi";
 import { injected, walletConnect } from "wagmi/connectors";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -21,9 +21,12 @@ export const walletConnectConnector = walletConnect({
 export const injectedConnector = injected();
 
 const config = createConfig({
-  chains: [mainnet],
+  chains: [mainnet, base, polygon, celo],
   transports: {
     [mainnet.id]: http(),
+    [base.id]: http(),
+    [polygon.id]: http(),
+    [celo.id]: http(),
   },
   connectors: [walletConnectConnector, injectedConnector],
 });
