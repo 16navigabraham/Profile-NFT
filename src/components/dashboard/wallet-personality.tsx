@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import React, { useState, useMemo, createContext, useContext } from "react";
 import {
   Card,
   CardContent,
@@ -16,7 +16,6 @@ import { useAccount } from "wagmi";
 import { useTransactions } from "@/components/providers/transaction-provider";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { cn } from "@/lib/utils";
 
 const iconMap: { [key: string]: LucideIcon } = {
   Award,
@@ -52,8 +51,23 @@ const Badge = ({ name, description, icon, index }: { name: string; description: 
   );
 };
 
+interface PersonalityContextType {
+  personality: AnalyzeWalletPersonalityOutput | null;
+  isGenerating: boolean;
+  generatePersonality: () => Promise<void>;
+}
 
-const WalletPersonality = () => {
+const PersonalityContext = createContext<PersonalityContextType | undefined>(undefined);
+
+export const usePersonality = () => {
+  const context = useContext(PersonalityContext);
+  if (!context) {
+    throw new Error("usePersonality must be used within a WalletPersonality provider");
+  }
+  return context;
+};
+
+export const WalletPersonality = ({ children }: { children: React.ReactNode }) => {
   const [personality, setPersonality] = useState<AnalyzeWalletPersonalityOutput | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
@@ -101,8 +115,26 @@ const WalletPersonality = () => {
       setIsLoading(false);
     }
   };
+  
+  const value = {
+      personality,
+      isGenerating: isLoading || isTxLoading,
+      generatePersonality: handleGenerate,
+  }
 
-  const isButtonDisabled = isLoading || isTxLoading || !isConnected || transactions.length === 0;
+  return (
+    <PersonalityContext.Provider value={value}>
+        {children}
+    </PersonalityContext.Provider>
+  )
+};
+
+const WalletPersonalityContent = () => {
+  const { personality, isGenerating, generatePersonality } = usePersonality();
+  const { transactions, isLoading: isTxLoading } = useTransactions();
+  const { isConnected } = useAccount();
+
+  const isButtonDisabled = isGenerating || isTxLoading || !isConnected || transactions.length === 0;
 
   return (
     <Card className="bg-card border-border">
@@ -113,19 +145,20 @@ const WalletPersonality = () => {
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
-        <Button onClick={handleGenerate} disabled={isButtonDisabled}>
-          {isLoading ? (
+        <Button onClick={generatePersonality} disabled={isButtonDisabled}>
+          {isGenerating && !isTxLoading ? (
             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
           ) : (
             <Sparkles className="mr-2 h-4 w-4" />
           )}
-          {isLoading
+          {isGenerating && !isTxLoading
             ? "Analyzing..."
             : isTxLoading
             ? "Loading transactions..."
             : "Analyze Personality"}
         </Button>
-        {isLoading && (
+        
+        {(isGenerating && !isTxLoading) && (
           <div className="pt-2 space-y-4">
             <Skeleton className="h-5 w-3/4" />
              <Skeleton className="h-4 w-full" />
@@ -136,6 +169,7 @@ const WalletPersonality = () => {
             </div>
           </div>
         )}
+
         {personality && (
           <div className="pt-2 space-y-4 animate-in fade-in">
             <h3 className="text-lg font-bold text-primary">{personality.personality}</h3>
@@ -159,7 +193,9 @@ const WalletPersonality = () => {
         )}
       </CardContent>
     </Card>
-  );
-};
+  )
+}
 
+// Add this to your main page layout where you want the card to appear.
+// e.g. <WalletPersonality><WalletPersonalityContent /></WalletPersonality>
 export default WalletPersonality;
