@@ -67,68 +67,6 @@ export const usePersonality = () => {
   return context;
 };
 
-export const WalletPersonality = ({ children }: { children: React.ReactNode }) => {
-  const [personality, setPersonality] = useState<AnalyzeWalletPersonalityOutput | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
-  const { toast } = useToast();
-  const { address, isConnected } = useAccount();
-  const { transactions, isLoading: isTxLoading } = useTransactions();
-
-  const walletAgeInDays = useMemo(() => {
-    if (!transactions || transactions.length === 0) return 0;
-    const firstTx = [...transactions].sort((a, b) => parseInt(a.timeStamp) - parseInt(b.timeStamp))[0];
-    if (!firstTx) return 0;
-    const firstTxTimestamp = parseInt(firstTx.timeStamp) * 1000;
-    const ageInMs = Date.now() - firstTxTimestamp;
-    return Math.floor(ageInMs / (1000 * 60 * 60 * 24));
-  }, [transactions]);
-
-  const handleGenerate = async () => {
-    if (!address) return;
-    setIsLoading(true);
-    setPersonality(null);
-    try {
-      const transactionSummary = transactions
-        .slice(0, 15)
-        .map(
-          (t) => `Tx from ${t.from.slice(0,6)}... to ${t.to.slice(0,6)}... of ${ (parseFloat(t.value) / 10 ** 18).toFixed(4)} ETH`
-        ).join("; ");
-
-      const input = {
-        walletAddress: address,
-        transactionCount: transactions.length,
-        walletAgeInDays,
-        transactionHistory: transactionSummary || "No recent transactions.",
-      };
-      
-      const result = await analyzeWalletPersonality(input);
-      setPersonality(result);
-
-    } catch (error) {
-      console.error("Failed to analyze wallet personality:", error);
-      toast({
-        variant: "destructive",
-        title: "Analysis Failed",
-        description: "Couldn't generate your wallet personality. Please try again.",
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
-  
-  const value = {
-      personality,
-      isGenerating: isLoading || isTxLoading,
-      generatePersonality: handleGenerate,
-  }
-
-  return (
-    <PersonalityContext.Provider value={value}>
-        {children}
-    </PersonalityContext.Provider>
-  )
-};
-
 const WalletPersonalityContent = () => {
   const { personality, isGenerating, generatePersonality } = usePersonality();
   const { transactions, isLoading: isTxLoading } = useTransactions();
@@ -195,6 +133,68 @@ const WalletPersonalityContent = () => {
     </Card>
   )
 }
+
+export const WalletPersonality = ({ children }: { children: React.ReactNode }) => {
+  const [personality, setPersonality] = useState<AnalyzeWalletPersonalityOutput | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const { toast } = useToast();
+  const { address, isConnected } = useAccount();
+  const { transactions, isLoading: isTxLoading } = useTransactions();
+
+  const walletAgeInDays = useMemo(() => {
+    if (!transactions || transactions.length === 0) return 0;
+    const firstTx = [...transactions].sort((a, b) => parseInt(a.timeStamp) - parseInt(b.timeStamp))[0];
+    if (!firstTx) return 0;
+    const firstTxTimestamp = parseInt(firstTx.timeStamp) * 1000;
+    const ageInMs = Date.now() - firstTxTimestamp;
+    return Math.floor(ageInMs / (1000 * 60 * 60 * 24));
+  }, [transactions]);
+
+  const handleGenerate = async () => {
+    if (!address) return;
+    setIsLoading(true);
+    setPersonality(null);
+    try {
+      const transactionSummary = transactions
+        .slice(0, 15)
+        .map(
+          (t) => `Tx from ${t.from.slice(0,6)}... to ${t.to.slice(0,6)}... of ${ (parseFloat(t.value) / 10 ** 18).toFixed(4)} ETH`
+        ).join("; ");
+
+      const input = {
+        walletAddress: address,
+        transactionCount: transactions.length,
+        walletAgeInDays,
+        transactionHistory: transactionSummary || "No recent transactions.",
+      };
+      
+      const result = await analyzeWalletPersonality(input);
+      setPersonality(result);
+
+    } catch (error) {
+      console.error("Failed to analyze wallet personality:", error);
+      toast({
+        variant: "destructive",
+        title: "Analysis Failed",
+        description: "Couldn't generate your wallet personality. Please try again.",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  
+  const value = {
+      personality,
+      isGenerating: isLoading || isTxLoading,
+      generatePersonality: handleGenerate,
+  }
+
+  return (
+    <PersonalityContext.Provider value={value}>
+        {children}
+    </PersonalityContext.Provider>
+  )
+};
 
 // Add this to your main page layout where you want the card to appear.
 // e.g. <WalletPersonality><WalletPersonalityContent /></WalletPersonality>
