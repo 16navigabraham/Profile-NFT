@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback, useRef } from "react";
@@ -29,18 +30,15 @@ export const TransactionProvider = ({ children }: { children: ReactNode }) => {
   const [error, setError] = useState<string | null>(null);
   const isFetching = useRef(false);
 
-  const fetchTransactions = useCallback(async () => {
-    if (!address || isFetching.current || !chainId) {
-      if (!address) setTransactions([]);
-      return;
-    };
+  const fetchTransactions = useCallback(async (currentAddress: string, currentChainId: number) => {
+    if (isFetching.current) return;
     
     isFetching.current = true;
     setIsLoading(true);
     setError(null);
 
     try {
-      const response = await fetch(`/api/transactions?address=${address}&chainId=${chainId}&page=1&offset=100`);
+      const response = await fetch(`/api/transactions?address=${currentAddress}&chainId=${currentChainId}&page=1&offset=100`);
       const data = await response.json();
 
       if (!response.ok) {
@@ -62,23 +60,29 @@ export const TransactionProvider = ({ children }: { children: ReactNode }) => {
       setIsLoading(false);
       isFetching.current = false;
     }
-  }, [address, chainId]);
+  }, []);
   
   useEffect(() => {
-    if (isConnected && address) {
-      fetchTransactions();
+    if (isConnected && address && chainId) {
+      fetchTransactions(address, chainId);
     } else {
       setTransactions([]);
       setError(null);
       setIsLoading(false);
     }
-  }, [address, isConnected, fetchTransactions, chainId]);
+  }, [address, isConnected, chainId, fetchTransactions]);
+
+  const refetch = useCallback(() => {
+    if (isConnected && address && chainId) {
+      fetchTransactions(address, chainId);
+    }
+  }, [isConnected, address, chainId, fetchTransactions]);
 
   const value = {
     transactions,
     isLoading,
     error,
-    refetch: fetchTransactions,
+    refetch,
   };
 
   return (
