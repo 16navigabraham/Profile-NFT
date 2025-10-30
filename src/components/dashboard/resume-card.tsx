@@ -2,7 +2,7 @@
 
 import React from "react";
 import { useAccount, useEnsName } from "wagmi";
-import { QRCode } from "qrcode.react";
+import QRCode from "qrcode.react";
 import { Avatar, AvatarImage, AvatarFallback } from "../ui/avatar";
 import { generateGradientFromAddress } from "@/lib/utils";
 import { useTransactions } from "../providers/transaction-provider";

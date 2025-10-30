@@ -67,7 +67,7 @@ export const usePersonality = () => {
   return context;
 };
 
-const WalletPersonalityContent = () => {
+export const WalletPersonalityContent = () => {
   const { personality, isGenerating, generatePersonality } = usePersonality();
   const { transactions, isLoading: isTxLoading } = useTransactions();
   const { isConnected } = useAccount();
