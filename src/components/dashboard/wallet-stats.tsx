@@ -3,22 +3,32 @@
 import { useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Activity, Calendar, Link as LinkIcon, AlertCircle } from "lucide-react";
+import { Activity, Calendar, AlertCircle } from "lucide-react";
 import { useAccount } from "wagmi";
 import { Skeleton } from "../ui/skeleton";
 import { formatDistanceToNowStrict } from 'date-fns';
 import { useTransactions } from "@/components/providers/transaction-provider";
+import {
+  Radar,
+  RadarChart,
+  PolarGrid,
+  PolarAngleAxis,
+  PolarRadiusAxis,
+  ResponsiveContainer,
+  Legend,
+  Tooltip,
+} from "recharts";
 
-const chainColors: { [key: string]: string } = {
-  Ethereum: "bg-blue-500/20 text-blue-400 border-blue-500/30",
-  Polygon: "bg-purple-500/20 text-purple-400 border-purple-500/30",
-  Arbitrum: "bg-sky-500/20 text-sky-400 border-sky-500/30",
-  Optimism: "bg-red-500/20 text-red-400 border-red-500/30",
-  Base: "bg-indigo-500/20 text-indigo-400 border-indigo-500/30",
-};
+const activityData = [
+  { subject: 'Transactions', Ethereum: 85, Polygon: 65, Base: 70, Celo: 40, fullMark: 100 },
+  { subject: 'Contracts', Ethereum: 75, Polygon: 80, Base: 60, Celo: 30, fullMark: 100 },
+  { subject: 'Volume', Ethereum: 60, Polygon: 70, Base: 85, Celo: 50, fullMark: 100 },
+  { subject: 'NFTs', Ethereum: 70, Polygon: 50, Base: 40, Celo: 20, fullMark: 100 },
+  { subject: 'DeFi', Ethereum: 90, Polygon: 85, Base: 75, Celo: 60, fullMark: 100 },
+];
 
 const WalletStats = () => {
-  const { isConnected } = useAccount();
+  const { isConnected, chain } = useAccount();
   const { transactions, isLoading } = useTransactions();
 
   const stats = useMemo(() => {
@@ -64,18 +74,18 @@ const WalletStats = () => {
           Aggregated Stats
         </CardTitle>
       </CardHeader>
-      <CardContent className="space-y-6">
+      <CardContent className="space-y-4">
         {!isConnected ? (
-           <div className="flex flex-col items-center justify-center text-center text-muted-foreground p-4 rounded-lg bg-background/30">
+           <div className="flex flex-col items-center justify-center text-center text-muted-foreground p-4 rounded-lg bg-background/30 h-[260px]">
             <AlertCircle className="h-8 w-8 mb-2" />
             <p className="text-sm font-medium">Connect your wallet to see your aggregated onchain stats.</p>
           </div>
         ) : (
-          <>
+          <div className="space-y-4">
             <StatRow 
                 icon={Activity} 
                 label="Total Transactions" 
-                value={stats.totalTransactions >= 100 ? "100+" : stats.totalTransactions.toLocaleString()} 
+                value={isLoading ? '...' : (stats.totalTransactions >= 100 ? "100+" : stats.totalTransactions.toLocaleString())} 
                 loading={isLoading} 
             />
             <StatRow 
@@ -85,36 +95,31 @@ const WalletStats = () => {
                 loading={isLoading} 
             />
 
-            <div className="flex flex-col gap-3">
-              <div className="flex items-center gap-3 text-sm text-muted-foreground">
-                <LinkIcon className="h-5 w-5 text-primary" />
-                <span>Top Chains</span>
-              </div>
-              {isLoading ? (
-                <div className="flex flex-wrap gap-2">
-                  <Skeleton className="h-6 w-20 rounded-full" />
-                </div>
-              ) : (
-                <div className="flex flex-wrap gap-2">
-                  <Badge
-                      key="Ethereum"
-                      variant="secondary"
-                      className={`text-xs font-medium ${
-                        chainColors["Ethereum"] || "bg-muted text-muted-foreground"
-                      }`}
-                    >
-                      Ethereum
-                    </Badge>
-                     <Badge
-                      variant="secondary"
-                      className={`text-xs font-medium bg-muted text-muted-foreground`}
-                    >
-                      More coming soon
-                    </Badge>
-                </div>
-              )}
+            <div className="h-[220px] w-full">
+              <ResponsiveContainer width="100%" height="100%">
+                  <RadarChart cx="50%" cy="50%" outerRadius="80%" data={activityData}>
+                    <defs>
+                      <radialGradient id="radarGradient">
+                        <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.3}/>
+                        <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0}/>
+                      </radialGradient>
+                    </defs>
+                    <PolarGrid stroke="hsl(var(--border) / 0.5)" />
+                    <PolarAngleAxis dataKey="subject" tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }} />
+                    <PolarRadiusAxis angle={30} domain={[0, 100]} tick={false} axisLine={false} />
+                    <Tooltip
+                      contentStyle={{
+                        background: 'hsl(var(--background))',
+                        borderColor: 'hsl(var(--border))',
+                        borderRadius: 'var(--radius)',
+                      }}
+                    />
+                    <Radar name={chain?.name ?? "Current Chain"} dataKey={chain?.name ?? "Ethereum"} stroke="hsl(var(--primary))" fill="url(#radarGradient)" fillOpacity={0.8} />
+                    <Legend iconType="circle" wrapperStyle={{ fontSize: '12px' }} />
+                  </RadarChart>
+              </ResponsiveContainer>
             </div>
-          </>
+          </div>
         )}
       </CardContent>
     </Card>
